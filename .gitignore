@@ -2,6 +2,7 @@
 .vscode
 config.json
 test.py
+test.sh
 .coverage *
 
 # Byte-compiled / optimized / DLL files
