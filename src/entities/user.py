@@ -64,6 +64,9 @@ class User(DatabaseEntity):
             return False, "No pending friend request with user."
         del self.friend_requests[user.key]
 
+        if self.key in user.friend_requests:
+            del user.friend_requests[self.key]
+
         now_date = datetime.now()
         self.friends[user.key] = now_date
         user.friends[self.key] = now_date
