@@ -29,6 +29,17 @@ class Database():
             response["id"] = str(response.pop("_id"))
         return response
     
+    async def find_all(self, collection: Collection, **kwargs) -> list[dict]:
+        if not isinstance(collection, Collection) or collection == Collection.NONE:
+            raise RuntimeError(f"Database method find_all received an invalid collection")
+        cursor = self.db[collection.value].find(filter=kwargs)
+        results = []
+        async for document in cursor:
+            if isinstance(document, dict):
+                document['id'] = str(document.pop("_id"))
+            results.append(document)
+        return results
+    
     async def save(self, collection: Collection, document: dict, unique_keys: list[str] = []) -> None:
         if not isinstance(collection, Collection) or collection == Collection.NONE:
             raise RuntimeError(f"Database method save received an invalid collection")

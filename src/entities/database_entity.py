@@ -15,6 +15,15 @@ class DatabaseEntity(BaseModel):
         result = await DB.find_one(collection=cls.COLLECTION, **kwargs)
         if isinstance(result, dict):
             return cls.model_validate(result)
+        
+    @classmethod
+    async def find_all(cls, **kwargs):
+        result = await DB.find_all(collection=cls.COLLECTION, **kwargs)
+        entities = []
+        for data in result:
+            entity = cls.model_validate(data)
+            entities.append(entity)
+        return entities
     
     async def save(self) -> None:
         document = self.model_dump()
