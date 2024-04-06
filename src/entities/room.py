@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional
 from src.database.collection import Collection
 from src.entities.database_entity import DatabaseEntity
+from src.entities.user import User
 from src.resources.models.room_models import RoomInformation
 
 CODE_CHARACTERS = "ABCDEFGHKMNPQRSTUVWXYZ23456789"
@@ -27,13 +28,16 @@ class Room(DatabaseEntity):
         return Room(owner_key=owner_key, code=code, visible=visibe)
     
     async def get_information(self) -> RoomInformation:
+        owner = await User.find_one(key=self.owner_key)
+        opponent = await User.find_one(key=self.opponent_key) if self.opponent_key else None
         return RoomInformation(
             code=self.code,
-            owner_name="Owner",
-            opponent_name="Opponent",
+            owner_name=owner.name if isinstance(owner, User) else "No Name",
+            opponent_name=opponent.name if isinstance(opponent, User) else None,
             owner_ready=self.owner_ready,
             opponent_ready=self.opponent_ready,
-            created_stamp=int(self.created_stamp.timestamp())
+            created_stamp=int(self.created_stamp.timestamp()),
+            is_ready=self.is_ready()
         )
     
     def join(self, key: str) -> tuple[bool, str]:
@@ -70,6 +74,9 @@ class Room(DatabaseEntity):
         if self.visible:
             return True
         return key == self.owner_key or key == self.opponent_key
+    
+    def is_ready(self) -> bool:
+        return isinstance(self.opponent_key, str) and self.owner_ready and self.opponent_ready
 
 async def generate_code() -> str:
     while True:

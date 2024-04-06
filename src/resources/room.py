@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Security, HTTPException, Query, status
-from src.auth.api_key_authentication import api_key_validator, ApiKey
+from src.auth.api_key_authentication import user_validator, User
 from src.entities.room import Room
 from src.resources.models.base_models import ErrorMessage, SuccessMessage
 from src.resources.models.room_models import RoomCreationSuccess, RoomInformation
 
 router = APIRouter(prefix="/room")
 
-# region leave
+# region status
 @router.get(
     "/status",
     tags=["Room"],
@@ -23,11 +23,11 @@ async def get_status(
     code: str = Query(
         description="The code of the room."
     ),
-    api_key: ApiKey = Security(api_key_validator("room-ready"))
+    user: User = Security(user_validator("room-status"))
 ) -> RoomInformation:
     code = code.upper()
     room = await Room.find_one(code=code)
-    if not isinstance(room, Room) or not room.visible_to(key=api_key.key):
+    if not isinstance(room, Room) or not room.visible_to(key=user.key):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found.")
     return await room.get_information()
 # endregion
@@ -51,9 +51,9 @@ async def create(
         default=False,
         description="If the server is visible in public server view."
     ), 
-    api_key: ApiKey = Security(api_key_validator("room-create"))
+    user: User = Security(user_validator("room-create"))
 ) -> RoomCreationSuccess:
-    room = await Room.create(owner_key=api_key.key, visibe=visible)
+    room = await Room.create(owner_key=user.key, visibe=visible)
     if not isinstance(room, Room):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Maximum room limit reached.")
     await room.save()
@@ -78,14 +78,14 @@ async def join(
     code: str = Query(
         description="The code of the room to join."
     ), 
-    api_key: ApiKey = Security(api_key_validator("room-join"))
+    user: User = Security(user_validator("room-join"))
 ) -> None:
     code = code.upper()
     room = await Room.find_one(code=code)
     if not isinstance(room, Room):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found.")
     
-    success, message = room.join(key=api_key.key)
+    success, message = room.join(key=user.key)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
     await room.save()
@@ -110,14 +110,14 @@ async def leave(
     code: str = Query(
         description="The code of the room to leave."
     ), 
-    api_key: ApiKey = Security(api_key_validator("room-leave"))
+    user: User = Security(user_validator("room-leave"))
 ) -> SuccessMessage:
     code = code.upper()
     room = await Room.find_one(code=code)
     if not isinstance(room, Room):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found.")
     
-    success, message = await room.leave(key=api_key.key)
+    success, message = await room.leave(key=user.key)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
     
@@ -125,7 +125,7 @@ async def leave(
 # endregion
 
 
-# region leave
+# region ready
 @router.post(
     "/ready",
     tags=["Room"],
@@ -145,14 +145,14 @@ async def ready(
     state: bool = Query(
         description="The new ready state"  
     ),
-    api_key: ApiKey = Security(api_key_validator("room-ready"))
+    user: User = Security(user_validator("room-ready"))
 ) -> None:
     code = code.upper()
     room = await Room.find_one(code=code)
     if not isinstance(room, Room):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Room not found.")
     
-    success, message = room.ready(key=api_key.key, state=state)
+    success, message = room.ready(key=user.key, state=state)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
     
