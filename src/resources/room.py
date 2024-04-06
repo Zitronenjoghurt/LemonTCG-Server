@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Security, HTTPException, Query, status
 from src.auth.api_key_authentication import user_validator, User
 from src.entities.room import Room
-from src.resources.models.base_models import ErrorMessage, SuccessMessage
-from src.resources.models.room_models import RoomCreationSuccess, RoomInformation
+from src.models.base_models import ErrorMessage, SuccessMessage
+from src.models.room_models import RoomCreationSuccess, RoomInformation
 
 router = APIRouter(prefix="/room")
 
-# region status
+# region get_status
 @router.get(
     "/status",
     tags=["Room"],
@@ -14,16 +14,17 @@ router = APIRouter(prefix="/room")
     response_model=RoomInformation,
     responses={
         status.HTTP_200_OK: {"description": "Room information"},
+        status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"},
         status.HTTP_404_NOT_FOUND: {"description": "Room not found", "model": ErrorMessage}
     },
     summary="Status",
     description="Retrieve status information about a room."
 )
 async def get_status(
+    user: User = Security(user_validator("get-room-status")),
     code: str = Query(
         description="The code of the room."
-    ),
-    user: User = Security(user_validator("room-status"))
+    )
 ) -> RoomInformation:
     code = code.upper()
     room = await Room.find_one(code=code)
@@ -33,7 +34,7 @@ async def get_status(
 # endregion
 
 
-# region create
+# region post_create
 @router.post(
     "/create",
     tags=["Room"],
@@ -41,17 +42,18 @@ async def get_status(
     response_model=RoomCreationSuccess,
     responses={
         status.HTTP_201_CREATED: {"description": "Room successfully created"},
-        status.HTTP_400_BAD_REQUEST: {"description": "Unable to create room due to room size limit", "model": ErrorMessage}
+        status.HTTP_400_BAD_REQUEST: {"description": "Unable to create room", "model": ErrorMessage},
+        status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"}
     },
     summary="Create",
     description="Create multiplayer rooms for creating game sessions."
 )
-async def create(
+async def post_create(
+    user: User = Security(user_validator("post-room-create")),
     visible: bool = Query(
         default=False,
         description="If the server is visible in public server view."
-    ), 
-    user: User = Security(user_validator("room-create"))
+    )
 ) -> RoomCreationSuccess:
     room = await Room.create(owner_key=user.key, visibe=visible)
     if not isinstance(room, Room):
@@ -61,7 +63,7 @@ async def create(
 # endregion
 
 
-# region join
+# region post_join
 @router.post(
     "/join",
     tags=["Room"],
@@ -69,16 +71,17 @@ async def create(
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Successfully joined the room"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unable to join room", "model": ErrorMessage},
+        status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"},
         status.HTTP_404_NOT_FOUND: {"description": "Room not found", "model": ErrorMessage}
     },
     summary="Join",
     description="Join a multiplayer room."
 )
-async def join(
+async def post_join(
+    user: User = Security(user_validator("post-room-join")),
     code: str = Query(
         description="The code of the room to join."
-    ), 
-    user: User = Security(user_validator("room-join"))
+    )
 ) -> None:
     code = code.upper()
     room = await Room.find_one(code=code)
@@ -92,7 +95,7 @@ async def join(
 # endregion
 
 
-# region leave
+# region post_leave
 @router.post(
     "/leave",
     tags=["Room"],
@@ -101,16 +104,17 @@ async def join(
     responses={
         status.HTTP_200_OK: {"description": "Successfully left the room"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unable to leave room", "model": ErrorMessage},
+        status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"},
         status.HTTP_404_NOT_FOUND: {"description": "Room not found", "model": ErrorMessage}
     },
     summary="Leave",
     description="Leave a multiplayer room."
 )
-async def leave(
+async def post_leave(
+    user: User = Security(user_validator("post-room-leave")),
     code: str = Query(
         description="The code of the room to leave."
-    ), 
-    user: User = Security(user_validator("room-leave"))
+    )
 ) -> SuccessMessage:
     code = code.upper()
     room = await Room.find_one(code=code)
@@ -125,7 +129,7 @@ async def leave(
 # endregion
 
 
-# region ready
+# region post_ready
 @router.post(
     "/ready",
     tags=["Room"],
@@ -133,19 +137,20 @@ async def leave(
     responses={
         status.HTTP_204_NO_CONTENT: {"description": "Successfully changed ready state"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unable to change ready state", "model": ErrorMessage},
+        status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"},
         status.HTTP_404_NOT_FOUND: {"description": "Room not found", "model": ErrorMessage}
     },
     summary="Ready",
     description="Change your ready state for a room."
 )
-async def ready(
+async def post_ready(
+    user: User = Security(user_validator("post-room-ready")),
     code: str = Query(
         description="The code of the room to leave."
     ),
     state: bool = Query(
         description="The new ready state"  
-    ),
-    user: User = Security(user_validator("room-ready"))
+    )
 ) -> None:
     code = code.upper()
     room = await Room.find_one(code=code)

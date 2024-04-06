@@ -4,7 +4,7 @@ from typing import Optional
 from src.database.collection import Collection
 from src.entities.database_entity import DatabaseEntity
 from src.entities.user import User
-from src.resources.models.room_models import RoomInformation
+from src.models.room_models import RoomInformation
 
 CODE_CHARACTERS = "ABCDEFGHKMNPQRSTUVWXYZ23456789"
 MAX_ROOM_COUNT = 5
