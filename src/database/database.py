@@ -2,8 +2,8 @@ from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
 from src.database.collection import Collection
+from src.entities.config import Config
 
-URL = 'mongodb://localhost:27017'
 DB = "LemonTCG"
 
 class Database():
@@ -12,7 +12,8 @@ class Database():
     def __init__(self) -> None:
         if Database._instance is not None:
             raise RuntimeError("Tried to initialize multiple instances of Database.")
-        self.client = AsyncIOMotorClient(URL)
+        config = Config.load_state()
+        self.client = AsyncIOMotorClient(config.db_url)
         self.db = self.client[DB]
 
     @staticmethod
