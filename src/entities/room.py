@@ -43,6 +43,8 @@ class Room(DatabaseEntity):
     def join(self, key: str) -> tuple[bool, str]:
         if isinstance(self.opponent_key, str):
             return False, "Room is full."
+        if key == self.owner_key:
+            return False, "Can't join your own room."
         self.opponent_key = key
         return True, ""
     

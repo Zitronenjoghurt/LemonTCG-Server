@@ -34,11 +34,11 @@ async def get_user(user: User = Security(user_validator("get-user"))) -> UserPri
         status.HTTP_403_FORBIDDEN: {"description": "Invalid api key"},
         status.HTTP_404_NOT_FOUND: {"description": "User not found", "model": ErrorMessage}
     },
-    summary="User Search",
+    summary="Search",
     description="Retrieve information about a user."
 )
 async def get_search(
-    user: User = Security(user_validator("get-user")),
+    user: User = Security(user_validator("get-user-search")),
     name: str = Query(
         description="The username of the user to search, not case-sensitive."
     )
