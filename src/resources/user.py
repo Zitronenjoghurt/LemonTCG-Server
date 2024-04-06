@@ -46,5 +46,5 @@ async def get_search(
     search_user = await User.find_one(name=name.lower())
     if not isinstance(search_user, User):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
-    return user.get_public_information()
+    return search_user.get_public_information()
 # endregion
