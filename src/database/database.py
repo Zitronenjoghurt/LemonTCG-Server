@@ -55,3 +55,8 @@ class Database():
                 if isinstance(result, dict):
                     raise RuntimeError(f"Key '{key}' is a unique key, but entry with value '{value}' already exists.")
             await self.db[collection.value].insert_one(document)
+
+    async def delete(self, collection: Collection, document_id: str) -> None:
+        if not isinstance(collection, Collection) or collection == Collection.NONE:
+            raise RuntimeError(f"Database method delete received an invalid collection")
+        await self.db[collection.value].delete_one({"_id": ObjectId(document_id)})

@@ -27,4 +27,9 @@ class DatabaseEntity(BaseModel):
     
     async def save(self) -> None:
         document = self.model_dump()
-        await DB.save(self.COLLECTION, document=document, unique_keys=self.UNIQUE_FIELDS)
+        await DB.save(collection=self.COLLECTION, document=document, unique_keys=self.UNIQUE_FIELDS)
+
+    async def delete(self) -> None:
+        if not isinstance(self.id, str):
+            return
+        await DB.delete(collection=self.COLLECTION, document_id=self.id)
