@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from src.resources import friend, ping, room, user
+from src.resources import e2ee, friend, ping, room, user
 
 api = FastAPI(
     title="LemonTCG Multiplayer API",
@@ -10,6 +10,7 @@ api = FastAPI(
     redoc_url="/docs"
 )
 
+api.include_router(e2ee.router)
 api.include_router(friend.router)
 api.include_router(ping.router)
 api.include_router(room.router)

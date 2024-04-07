@@ -1,7 +1,9 @@
 import uuid
-from datetime import date, datetime
+from datetime import datetime
+from typing import Optional
 from src.database.collection import Collection
 from src.entities.database_entity import DatabaseEntity
+from src.entities.e2ee import E2EE
 from src.models.friend_models import FriendInformation, FriendList, FriendRequest, FriendRequests
 from src.models.user_models import UserPrivateInformation, UserPublicInformation
 
@@ -16,6 +18,7 @@ class User(DatabaseEntity):
     created_stamp: datetime = datetime.now()
     friends: dict[str, datetime] = {}
     friend_requests: dict[str, datetime] = {}
+    e2ee: E2EE = E2EE()
 
     @staticmethod
     def new(name: str) -> 'User':
