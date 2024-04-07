@@ -21,9 +21,10 @@ class User(DatabaseEntity):
     e2ee: E2EE = E2EE()
 
     @staticmethod
-    def new(name: str) -> 'User':
-        key = str(uuid.uuid4()).replace('-', '')
-        return User(key=key, name=name.lower(), display_name=name)
+    def new(name: str, api_key: Optional[str] = None) -> 'User':
+        if not isinstance(api_key, str):
+            api_key = str(uuid.uuid4()).replace('-', '')
+        return User(key=api_key, name=name.lower(), display_name=name)
     
     def use_endpoint(self, endpoint: str) -> None:
         if endpoint not in self.used_endpoints:
@@ -50,7 +51,7 @@ class User(DatabaseEntity):
             return False, "Can't add yourself as a friend."
         if user_key in self.friend_requests:
             return False, "Already sent a request."
-        if user_key in self.friend_requests:
+        if user_key in self.friends:
             return False, "Already on friendlist."
         self.friend_requests[user_key] = datetime.now()
         return True, ""
@@ -63,6 +64,8 @@ class User(DatabaseEntity):
         return True, ""
     
     async def accept_friend_request(self, user: 'User') -> tuple[bool, str]:
+        if user.key in self.friends:
+            return False, "Already on friendlist."
         if user.key not in self.friend_requests:
             return False, "No pending friend request with user."
         del self.friend_requests[user.key]
