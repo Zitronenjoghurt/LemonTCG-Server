@@ -22,9 +22,10 @@ router = APIRouter(prefix="/e2ee")
 async def post_e2ee(
     user: User = Security(user_validator("post-e2ee")),
     public_key: str = Header(..., alias="X-Public-Key", description="Public Key used for E2EE"),
-    encrypted_private_key: str = Header(..., alias="X-Encrypted-Private-Key", description="Encrypted Private Key used for E2EE")
+    encrypted_private_key: str = Header(..., alias="X-Encrypted-Private-Key", description="Encrypted Private Key used for E2EE"),
+    salt_hex: str = Header(..., alias="X-Salt-Hex", description="Salt used for password encryption."),
 ) -> E2EEPublicKey:
-    success, message = user.e2ee.set_up(public_key=public_key, private_key=encrypted_private_key)
+    success, message = user.e2ee.set_up(public_key=public_key, private_key=encrypted_private_key, salt_hex=salt_hex)
     if not success:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=message)
     await user.save()
@@ -98,7 +99,7 @@ async def get_e2ee_private(
     "/public",
     tags=["E2EE"],
     status_code=status.HTTP_200_OK,
-    response_model=E2EEEncryptedPrivateKey,
+    response_model=E2EEPublicKey,
     responses={
         status.HTTP_200_OK: {"description": "E2EE public key"},
         status.HTTP_400_BAD_REQUEST: {"description": "Unable to retrieve public key", "model": ErrorMessage},

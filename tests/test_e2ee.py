@@ -3,7 +3,7 @@ from httpx import AsyncClient
 
 @pytest.mark.asyncio
 async def test_post_e2ee(client: AsyncClient, header1: dict):
-    header1.update({"X-Public-Key": "public", "X-Encrypted-Private-Key": "private"})
+    header1.update({"X-Public-Key": "public", "X-Encrypted-Private-Key": "private", "X-Salt-Hex": "salty"})
     response = await client.post("/e2ee/")
     assert response.status_code == 403
 
@@ -39,7 +39,7 @@ async def test_get_e2ee_private(client: AsyncClient, header1: dict, header2):
 
     response = await client.get("/e2ee/private", headers=header1)
     assert response.status_code == 200
-    assert response.json() == {"key": "private"}
+    assert response.json() == {"key": "private", "salt_hex": "salty"}
 
     response = await client.get("/e2ee/private", headers=header2)
     assert response.status_code == 400

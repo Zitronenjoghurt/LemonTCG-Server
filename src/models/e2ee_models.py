@@ -5,3 +5,4 @@ class E2EEPublicKey(BaseModel):
 
 class E2EEEncryptedPrivateKey(BaseModel):
     key: str
+    salt_hex: str
