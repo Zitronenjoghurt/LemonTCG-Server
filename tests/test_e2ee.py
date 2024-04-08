@@ -57,3 +57,10 @@ async def test_get_e2ee_public(client: AsyncClient, header1: dict, header2):
     response = await client.get("/e2ee/public", headers=header2)
     assert response.status_code == 400
     assert response.json() == {"detail": "E2EE not set up."}
+
+@pytest.mark.asyncio
+async def test_setup_remaining(client: AsyncClient, header2: dict):
+    header2.update({"X-Public-Key": "public2", "X-Encrypted-Private-Key": "private", "X-Salt-Hex": "salty"})
+    response = await client.post("/e2ee/", headers=header2)
+    assert response.status_code == 200
+    assert response.json() == {"key": "public2"}
